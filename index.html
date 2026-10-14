@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="es-ES">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>El Ahorcado</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      width: 80%;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    #palabra {
+      font-size: 2rem;
+      letter-spacing: 5px;
+    }
+
+    button {
+      margin: 10px 5px;
+    }
+
+    span.fin {
+      font-weight: 700;
+      color: red;
+    }
+
+    span.ganado {
+      font-weight: 700;
+      color: green;
+    }
+
+    #svg-ahorcado {
+      border: 1px solid #ddd;
+      display: block;
+      margin: 10px auto;
+    }
+
+    /* Ocultar inicialmente todas las partes que tienen la clase 'parte-cuerpo' */
+    .parte-cuerpo {
+      display: none;
+    }
+  </style>
+
+</head>
+
+<body>
+  <header>
+    <h2>Juego del Ahorcado</h2>
+    <button onclick="empezar()">Empezar</button>
+  </header>
+  <main>
+    <div id="palabra">
+      <h2>palabra</h2>
+    </div>
+    <div id="errores">
+      <!-- SVG del Ahorcado -->
+      <svg id="svg-ahorcado" width="200" height="250" viewBox="0 0 200 250">
+        <!-- Poste básico (Siempre visible) -->
+        <line x1="10" y1="240" x2="150" y2="240" stroke="black" stroke-width="4" />
+        <line x1="40" y1="240" x2="40" y2="20" stroke="black" stroke-width="4" />
+        <line x1="40" y1="20" x2="120" y2="20" stroke="black" stroke-width="4" />
+        <line x1="120" y1="20" x2="120" y2="50" stroke="black" stroke-width="4" />
+
+        <!-- Partes del cuerpo (Inician ocultas) -->
+        <circle id="cabeza" class="parte-cuerpo" cx="120" cy="70" r="20" stroke="black" stroke-width="4" fill="none" />
+        <line id="tronco" class="parte-cuerpo" x1="120" y1="90" x2="120" y2="150" stroke="black" stroke-width="4" />
+        <line id="brazo-izq" class="parte-cuerpo" x1="120" y1="110" x2="90" y2="130" stroke="black" stroke-width="4" />
+        <line id="brazo-der" class="parte-cuerpo" x1="120" y1="110" x2="150" y2="130" stroke="black" stroke-width="4" />
+        <line id="pierna-izq" class="parte-cuerpo" x1="120" y1="150" x2="90" y2="190" stroke="black" stroke-width="4" />
+        <line id="pierna-der" class="parte-cuerpo" x1="120" y1="150" x2="150" y2="190" stroke="black"
+          stroke-width="4" />
+      </svg>
+      <h3>Número de Errores: <span id="error"></span></h3>
+    </div>
+  </main>
+  <footer id="teclado">
+
+  </footer>
+
+  <script>
+    const PALABRA = document.getElementById('palabra');
+    const TECLADO = document.getElementById('teclado');
+    const ERROR = document.getElementById('error');
+
+    const partesCuerpo = [
+      "#poste",      // Sin fallos
+      "#pierna-izq", // Fallo 1
+      "#pierna-der", // Fallo 2
+      "#tronco",     // Fallo 3
+      "#brazo-izq",  // Fallo 4
+      "#brazo-der",  // Fallo 5
+      "#cabeza"      // Fallo 6
+    ];
+
+    let palabraRandom = "";
+    let palabraAdivinada = [];
+
+    let intentos = 6;
+    let error = 0;
+
+    const PALABRAS = ['esdrujula', 'cientifico', 'matematicas', 'extraterrestre', 'psicologia'];
+
+    function pintarErrores() {
+      const parte = document.querySelector(partesCuerpo[error]);
+      if (parte) {
+        parte.style.display = "block";
+      }
+
+      ERROR.innerHTML = error + "/" + intentos;
+    }
+
+    function pintarPalabra() {
+      PALABRA.innerHTML = palabraAdivinada.join(' ');
+    }
+
+    function teclado() {
+      TECLADO.innerHTML = '';
+      let abc = "QWERTYUIOPASDFGHJKLÑZXCVBNM"
+      for (let letra of abc) {
+        let button = document.createElement("button");
+        button.id = letra;
+        button.addEventListener("click", () => pulsar(letra));
+        button.innerHTML = letra;
+        TECLADO.appendChild(button);
+      }
+    }
+
+    function pulsar(valor) {
+      let posicionCorrecta = [];
+      for (let i = 0; i <= palabraRandom.length - 1; i++) {
+        if (palabraRandom[i] == valor && palabraAdivinada[i] == "_") {
+          posicionCorrecta.push(i);
+        }
+      }
+
+      if (posicionCorrecta.length == 0) {
+        error += 1;
+      } else {
+        for (let k = 0; k <= posicionCorrecta.length - 1; k++) {
+          palabraAdivinada[posicionCorrecta[k]] = valor;
+        }
+      }
+
+      pintarErrores();
+      pintarPalabra();
+
+      if (error == 6) {
+        TECLADO.innerHTML = "<span class='fin'>Estás muerto</span>"
+      }
+      else if (palabraAdivinada.join("") == palabraRandom) {
+        TECLADO.innerHTML = "<span class='ganado'>Has ganado</span>"
+      }
+
+      // check that a letter that has already been put does not get counted
+      
+      // remove duplicates, order. But it get deleted afterwards
+
+      // stop when error == 6
+      
+    }
+
+    function empezar() {
+      palabraRandom = PALABRAS[Math.floor(Math.random() * PALABRAS.length)].toUpperCase();
+      palabraAdivinada = Array(palabraRandom.length).fill('_');
+
+      console.log('Palabra Random', palabraRandom);
+      // Ocultamos todas las partes del cuerpo
+      document.querySelectorAll(".parte-cuerpo").forEach(parte => {
+        parte.style.display = "none";
+      });
+      error = 0;
+      pintarErrores();
+      pintarPalabra();
+      teclado()
+      console.log(palabraAdivinada);
+    }
+
+    
+
+  </script>
+
+</body>
+
+</html>
